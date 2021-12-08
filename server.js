@@ -16,11 +16,11 @@ app.use(express.json());
 
 app.use(express.static("public"));
 
-mongoose.connect(
-  process.env.MONGODB_URI || "mongodb://localhost/userdb",
-  { useNewUrlParser: true },
-  { useUnifiedTopology: true }
-);
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/workout", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useFindAndModify: true,
+});
 
 // NAVIGATION ROUTES
 
@@ -34,10 +34,31 @@ app.get("/exercise", (req, res) =>
 
 //GET ALL WORKOUTS
 
+app.get("/api/workouts/range", (req, res) => {
+  db.Workout.aggregate([
+    {
+      $addFields: { totalDuration: { $sum: "$exercises.duration" } },
+    },
+  ])
+    .limit(7)
+    .sort({ day: -1 })
+
+    .then((dbWorkout) => {
+      res.json(dbWorkout);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+});
+
 app.get("/api/workouts", (req, res) => {
-  db.Workout.find({})
-    .then((dbNote) => {
-      res.json(dbNote);
+  db.Workout.aggregate([
+    {
+      $addFields: { totalDuration: { $sum: "$exercises.duration" } },
+    },
+  ])
+    .then((dbWorkout) => {
+      res.json(dbWorkout);
     })
     .catch((err) => {
       res.json(err);
@@ -48,8 +69,8 @@ app.get("/api/workouts", (req, res) => {
 
 app.post("/api/workouts", ({ body }, res) => {
   db.Workout.create(body)
-    .then((dbUser) => {
-      res.json(dbUser);
+    .then((dbWorkout) => {
+      res.json(dbWorkout);
     })
     .catch((err) => {
       res.json(err);
@@ -57,6 +78,16 @@ app.post("/api/workouts", ({ body }, res) => {
 });
 
 //make an update for workout
+
+app.put("/api/workouts/:id", ({ params, body }, res) => {
+  db.Workout.findByIdAndUpdate(params.id, { $push: { exercises: body } })
+    .then((dbWorkout) => {
+      res.json(dbWorkout);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+});
 
 app.listen(PORT, () => {
   console.log(`App running on port ${PORT}!`);
