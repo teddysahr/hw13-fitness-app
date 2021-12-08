@@ -5,7 +5,8 @@ const path = require("path");
 
 const PORT = process.env.PORT || 3000;
 
-//const User = require("./userModel.js");
+const db = require("./models");
+
 const app = express();
 
 app.use(logger("dev"));
@@ -21,27 +22,7 @@ mongoose.connect(
   { useUnifiedTopology: true }
 );
 
-// app.post("/submit", ({ body }, res) => {
-//   User.create(body)
-//     .then((dbUser) => {
-//       res.json(dbUser);
-//     })
-//     .catch((err) => {
-//       res.json(err);
-//     });
-// });
-
-// app.get("/exercises", (req, res) => {
-//   db.Exercise.find({})
-//     .then((dbNote) => {
-//       res.json(dbNote);
-//     })
-//     .catch((err) => {
-//       res.json(err);
-//     });
-// });
-
-//app.get("/exercise", (req, res) => res.send("NICE!"));
+// NAVIGATION ROUTES
 
 app.get("/stats", (req, res) =>
   res.sendFile(path.join(__dirname, "public/stats.html"))
@@ -51,9 +32,29 @@ app.get("/exercise", (req, res) =>
   res.sendFile(path.join(__dirname, "public/exercise.html"))
 );
 
-//make a find for workout
+//GET ALL WORKOUTS
 
-//make an insert for workout
+app.get("/api/workouts", (req, res) => {
+  db.Workout.find({})
+    .then((dbNote) => {
+      res.json(dbNote);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+});
+
+//CREATE A NEW WORKOUT
+
+app.post("/api/workouts", ({ body }, res) => {
+  db.Workout.create(body)
+    .then((dbUser) => {
+      res.json(dbUser);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+});
 
 //make an update for workout
 
